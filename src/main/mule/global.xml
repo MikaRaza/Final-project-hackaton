@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+	<mongo:config name="MongoDB_Config" doc:name="MongoDB Config" doc:id="5f33c083-e63a-4363-a6cc-fbf609ba3f34" >
+		<mongo:connection-string-connection connectionString="mongodb+srv://sydneymondestin:6mF558eAWHp2uv1Q@estiam.1ky5lce.mongodb.net/test" />
+	</mongo:config>
+</mule>

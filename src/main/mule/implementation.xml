@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="auth-user" doc:id="32f7273f-c4cf-49a2-b854-639c412f0d59" >
+		<logger level="INFO" doc:name="Begin Flow" doc:id="a73e22b0-f36e-403b-b732-14fdc1fcd0e1" />
+		<mongo:find-documents doc:name="Find matching Token" doc:id="1768b515-2bc0-4727-abba-bafcea47d20d" config-ref="MongoDB_Config" collectionName="users" fields=",">
+			<mongo:query ><![CDATA[#[output application/json
+---
+{
+	token : attributes.queryParams.token
+}]]]></mongo:query>
+		</mongo:find-documents>
+		<ee:transform doc:name="Payload" doc:id="1af1a1b0-7e37-43ef-80d4-0a1e208d068f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Auth Choice" doc:id="3efe72c7-3aa6-4094-acd6-9be2ccefc548" >
+			<when expression="!isEmpty(payload)">
+				<ee:transform doc:name="Link to Web app" doc:id="bfa1d974-5de1-493c-91d4-11c4d1ca9fa0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"https://www.api-link.com/" ++ vars.userId]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[302]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Invalid User" doc:id="fd160c65-ebe3-41bc-86e8-04759c0d3920" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Flow" doc:id="e8b11590-46aa-4a37-9897-5f08b6307d3b" />
+	</flow>
+	<flow name="add-users" doc:id="76d3137b-b096-439b-82fe-4987d9774091" >
+		<ee:transform doc:name="Payload1" doc:id="2e3e9fbc-e3f8-4a1a-83e3-7fdf08bea662">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:insert-documents collectionName="users" doc:name="Insert Users" doc:id="086a2ef3-464a-4f28-acdb-52bfab2edd4e" config-ref="MongoDB_Config"/>
+		<ee:transform doc:name="Payload" doc:id="b9bd58f4-5779-4067-aa0d-21117974dbf6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="Find-All-users" doc:id="cb4a23e1-9020-49e5-9244-3c702f77ff42" >
+		<ee:transform doc:name="Payload1" doc:id="45453658-f6c1-41fd-99bd-717aee3b9406">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:find-documents collectionName="users" fields="," doc:name="Find All users" doc:id="06c8bffd-5373-451d-94bd-4cf73b23a82e" config-ref="MongoDB_Config"/>
+		<ee:transform doc:name="Payload" doc:id="f9217836-4b2a-4a6c-895e-c5c8a8a20d82" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="List-Collections" doc:id="de3051a5-9d1d-4427-8dbd-39d871cdab64" >
+		<mongo:list-collections doc:name="List collections" doc:id="78251719-cb4e-464b-83a3-7ac6f979ac3a" config-ref="MongoDB_Config"/>
+		<ee:transform doc:name="Payload" doc:id="16234d13-844c-473f-934a-5b5b78c8a9fb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
