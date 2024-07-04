@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
     <apikit:config name="hackaton-nfc-project-config" api="resource::1e6d1b0f-0006-4fee-9f74-4ee4ffe172df:hackaton-nfc-project:1.0.2:raml:zip:hackaton-nfc-project.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2ff592da-ee79-4593-8005-8819ece01405">
-        <http:listener-connection host="0.0.0.0" port="8081" />
+        <http:listener-connection host="${http.host}" port="${http.port}">
+		</http:listener-connection>
     </http:listener-config>
     <flow name="hackaton-nfc-project-main" doc:id="d61ff5be-f873-4c30-adb9-fe8042c18ac3">
         <http:listener config-ref="HTTP_Listener_config" path="/api/*">
@@ -101,30 +103,10 @@ output application/json
         </error-handler>
     </flow>
     <flow name="put:\users\(userId):application\json:hackaton-nfc-project-config">
-        <ee:transform>
-            <ee:variables>
-                <ee:set-variable variableName="userId">attributes.uriParams.'userId'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform>
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  id: "unique_user_id",
-  name: "John Doe"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="4b561f04-96b8-4cf1-aeed-ca5c4e330b85" name="update-users-byId"/>
     </flow>
     <flow name="delete:\users\(userId):hackaton-nfc-project-config">
-        <ee:transform>
-            <ee:variables>
-                <ee:set-variable variableName="userId">attributes.uriParams.'userId'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="delete:\users\(userId):hackaton-nfc-project-config" />
+		<flow-ref doc:name="Flow Reference" doc:id="20437a90-8772-4c36-857d-62add0b85672" name="delete-users-byID"/>
     </flow>
     <flow name="get:\auth:hackaton-nfc-project-config">
         <flow-ref doc:name="Flow Reference" doc:id="9f555740-7122-4564-80e6-4eb1422f297d" name="auth-user" />
@@ -133,24 +115,9 @@ output application/json
         <flow-ref doc:name="go to Find all users" doc:id="384c7024-c6be-4948-9363-33795de89ea0" name="Find-All-users" />
     </flow>
     <flow name="get:\users\(userId):hackaton-nfc-project-config">
-        <ee:transform>
-            <ee:variables>
-                <ee:set-variable variableName="userId">attributes.uriParams.'userId'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform>
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  id: "unique_user_id",
-  name: "John Doe"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="9936f1af-caea-47e2-97ab-4dea2e180464" name="getby-UserId"/>
     </flow>
     <flow name="post:\users:application\json:hackaton-nfc-project-config">
-		<flow-ref doc:name="Flow Reference" doc:id="534e8c6d-7d99-4ed7-aae5-49770f3221ad" name="add-users"/>
+		<flow-ref doc:name="Flow Reference" doc:id="534e8c6d-7d99-4ed7-aae5-49770f3221ad" name="add-users-ByID"/>
     </flow>
 </mule>

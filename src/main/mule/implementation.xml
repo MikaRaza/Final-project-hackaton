@@ -21,6 +21,12 @@ output application/json
 ---
 payload]]></ee:set-payload>
 			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="UserId" ><![CDATA[%dw 2.0
+output application/json
+---
+payload."_id".oid]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
 		<choice doc:name="Auth Choice" doc:id="3efe72c7-3aa6-4094-acd6-9be2ccefc548" >
 			<when expression="!isEmpty(payload)">
@@ -29,7 +35,7 @@ payload]]></ee:set-payload>
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-"https://www.api-link.com/" ++ vars.userId]]></ee:set-payload>
+"https://package-8nz8.onrender.com/#/profile/" ++ vars.UserId]]></ee:set-payload>
 					</ee:message>
 					<ee:variables >
 						<ee:set-variable variableName="httpStatus" ><![CDATA[302]]></ee:set-variable>
@@ -50,7 +56,77 @@ output application/java
 		</choice>
 		<logger level="INFO" doc:name="End Flow" doc:id="e8b11590-46aa-4a37-9897-5f08b6307d3b" />
 	</flow>
-	<flow name="add-users" doc:id="76d3137b-b096-439b-82fe-4987d9774091" >
+	<flow name="getby-UserId" doc:id="c4ab37e0-6fc1-4e99-b9fa-9ddea3babf4b" >
+		<ee:transform doc:name="Payload1" doc:id="850a63c6-8077-4eb3-9137-842c3b16a8b8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="IdUri" ><![CDATA[attributes.uriParams.userId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<mongo:find-documents doc:name="Find documents" doc:id="858e9a13-9ccf-4207-b2d3-6ffd8332515e" config-ref="MongoDB_Config" collectionName="users" fields=",">
+			<mongo:query ><![CDATA[#[output application/json
+---
+{
+	"_id.oid" : attributes.uriParams.id
+}]]]></mongo:query>
+		</mongo:find-documents>
+		<ee:transform doc:name="mapping format" doc:id="e52b0945-9ae2-4b38-bbdb-f3ebb590288d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload map (
+    $ mapObject ((value, key, index) -> 
+    {
+       (id: value."\$oid") if(key as String == '_id'),
+       (key): value
+    }
+    )
+) ) map (item) ->item - "_id"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="filter" doc:id="bbed5363-e970-46de-a521-b7795141790b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload filter ((item) -> 
+    item.id == vars.IdUri
+))[0]
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="delete-users-byID" doc:id="3657ce9d-0efa-415b-82a4-ab6899044c67" >
+		<ee:transform doc:name="Payload" doc:id="69540db6-bc11-4e53-b0aa-75f84725a36f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:remove-documents doc:name="Remove documents" doc:id="771303d3-3d5b-490a-a328-2fe69df57610" config-ref="MongoDB_Config" collectionName="users">
+			<mongo:query ><![CDATA[#[output application/json
+---
+{
+	"_id.oid" : attributes.uriParams.userId]]]></mongo:query>
+		</mongo:remove-documents>
+		<ee:transform doc:name="Payload1" doc:id="93049f31-7a91-4fff-a747-7c2adadcd138" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="add-users-ByID" doc:id="76d3137b-b096-439b-82fe-4987d9774091" >
 		<ee:transform doc:name="Payload1" doc:id="2e3e9fbc-e3f8-4a1a-83e3-7fdf08bea662">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
@@ -84,13 +160,41 @@ payload]]></ee:set-payload>
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload]]></ee:set-payload>
+(payload map (
+    $ mapObject ((value, key, index) -> 
+    {
+       (id: value."\$oid") if(key as String == '_id'),
+       (key): value
+    }
+    )
+) ) map (item) ->item - "_id"]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
 	<flow name="List-Collections" doc:id="de3051a5-9d1d-4427-8dbd-39d871cdab64" >
 		<mongo:list-collections doc:name="List collections" doc:id="78251719-cb4e-464b-83a3-7ac6f979ac3a" config-ref="MongoDB_Config"/>
 		<ee:transform doc:name="Payload" doc:id="16234d13-844c-473f-934a-5b5b78c8a9fb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="update-users-byId" doc:id="d1309ff5-b8a8-45a5-9b68-db8f3cf7521d" >
+		<ee:transform doc:name="Payload" doc:id="949ee6d3-89cb-4730-97c5-a626f24e0aca" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:update-documents doc:name="Update documents" doc:id="301887fa-7060-47f4-a506-081524e1635d" config-ref="MongoDB_Config" collectionName="users">
+			<mongo:query ><![CDATA[payload]]></mongo:query>
+		</mongo:update-documents>
+		<ee:transform doc:name="Payload1" doc:id="05cb3363-dba3-493e-b522-7fe180e95bd9" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
